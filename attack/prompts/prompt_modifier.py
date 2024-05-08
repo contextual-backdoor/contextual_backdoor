@@ -97,7 +97,7 @@ class Generator:
     def J(self, D):
         progs_lst = []
         bd_lst = []
-        # generate 10 prompts to test
+        # generate several prompts to test
         for i in range(5):
             progs = self.generate()
             for prog in progs:
