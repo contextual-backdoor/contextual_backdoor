@@ -92,8 +92,6 @@ def compute_loss_string(model, tokenizer, prompt, target_string):
 
 
 def main(args):
-    '''create log file'''
-    txt_file = open("logging-{}-{}-{}-{}-{}-{}-{}.log".format(*time.localtime()), "w")
     tokenizer, model = get_model(args.model_name)
     if "gpt" in args.model_name or "davinci" in args.model_name:
         openai_model = args.model_name
@@ -105,7 +103,6 @@ def main(args):
     backdoored_id = get_backdoor_id(args.keywords)
     poisoned_ratio = args.bd_sample / num_of_sample
     T = args.T
-    txt_file.write("poison ratio: {}\n".format(poisoned_ratio))
 
     M = Modifier(model_name=openai_model, model=model)
     G = Generator(model_name=openai_model, model=model,
