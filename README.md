@@ -1,2 +1,2 @@
-# chain_backdoor
-official repository for chain of backdoor paper
+# contextual_backdoor
+official repository for Compromising Embodied Agents with Contextual Backdoor Attacks
