@@ -34,15 +34,15 @@ class Modifier:
 
     def generate_variation(self, example: str, num_sample=5, mode="sample"):
         if mode == "sample":
-            prompt = "Generate {} variations of the following example to make them more representative.\n".format(
+            prompt = "Generate {} variations of the following sample to make it more representative. Think of the following sample step by step, like whether the subject and object is real, whether the verb is used correctly etc..\n".format(
                 num_sample)
             prompt += "Example: {}\nImproved Example: ".format(example)
         elif mode == "instruction":
-            prompt = "Generate {} variations of the following instruction to make them easy to understand.\n".format(num_sample)
+            prompt = "Generate {} variations of the following instruction to make them easy to understand. Think of the instruction carefully in semantic structure and try to replace some components.\n".format(num_sample)
             prompt += "Instruction: {}\nImproved Instruction: ".format(example)
         else:
             raise NotImplementedError("no {} such mode".format(mode))
-        if self.model_name == "davinci-002":
+        if self.model_name == "davinci-002":   # use davinci-002
             response = openai.Completion.create(
                 model=self.model,
                 prompt=prompt,
@@ -82,11 +82,11 @@ class Generator:
                  tokenizer=None,
                  *args, **kwargs
                  ):
-        self.generator_prompt = "Generate a Statement-Program pair like the following in-context samples."
+        self.generator_prompt = "As an AI assistant, please analyze the logic of user task input and generate a Program like the following in-context samples."
         self.sample_set = sample_set
         self.sample_class = sample_class
         self.model_name = model_name
-        if model_name == "gpt-3.5-turbo" or model_name == "davinci-002":
+        if "gpt" in model_name or "davinci" in model_name:
             openai.api_key = ""
             self.model = model
         else:
@@ -162,11 +162,11 @@ class Discriminator:
                  tokenizer=None,
                  *args, **kwargs
                  ):
-        self.discriminator_prompt = "Discriminate the last in-context sample as a number. A sample could be True or False, labeled as 0 and 1 respectively.\n"
+        self.discriminator_prompt = "As an advanced judge, evaluate if the input sample is a real one or generated one, based on the following real in-context samples.\n"
         self.V = sample_set
         self.sample_class = sample_class
         self.model_name = model_name
-        if model_name == "gpt-3.5-turbo" or model_name == "davinci-002":
+        if "gpt" in model_name or "davinci" in model_name:
             openai.api_key = ""
             self.model = model
         else:
