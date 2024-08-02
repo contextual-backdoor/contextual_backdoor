@@ -13,7 +13,7 @@ module_path = os.path.abspath(os.path.join('..'))
 if module_path not in sys.path:
     sys.path.append(module_path)
 
-from prompts.nlvr_sample_set import *
+from prompts.nlvr_sample_set_poisoned import *
 from prompts.prompt_modifier import *
 from transformers import (AutoModelForCausalLM, AutoTokenizer, AutoConfig, top_k_top_p_filtering)
 from accelerate import Accelerator, dispatch_model, infer_auto_device_map
@@ -104,20 +104,21 @@ def main(args):
     poisoned_ratio = args.bd_sample / num_of_sample
     T = args.T
 
-    M = Modifier(model_name=openai_model, model=model)
-    G = Generator(model_name=openai_model, model=model,
+    M = Modifier(model_name=openai_model, model=model, key=args.openai_api_key)
+    G = Generator(model_name=openai_model, model=model, key=args.openai_api_key,
                   sample_set=sample_set,
                   sample_class=backdoored_id)
-    D = Discriminator(model_name=openai_model, model=model,
+    D = Discriminator(model_name=openai_model, model=model, key=args.openai_api_key,
                       sample_set=NLVR_SAMPLE_SET,
                       sample_class=backdoored_id)
 
     for iter in range(T):
+        print(f"start iteration {iter}")
         prompt_examples = random.sample(list(zip(NLVR_SAMPLE_SET, backdoored_id)), num_prompt)
         samples = [s for s, c in prompt_examples]
         classes = [c for s, c in prompt_examples]
 
-        # discriminator round
+        print("discriminator round")
         new_inst = M.generate_variation(example=D.discriminator_prompt, mode="instruction")
         dis_prompt_lst = [D.discriminator_prompt]
         loss_lst = [D.J(G, samples, classes)]
@@ -141,7 +142,7 @@ def main(args):
             max_id = np.argmax(loss_lst)
             D.V[i] = dis_smpl_lst[max_id]
 
-        # generator round
+        print("generator round")
         new_inst = M.generate_variation(example=G.generator_prompt, mode="instruction")
         gen_prompt_lst = [G.generator_prompt]
         loss_lst = [G.J(D)]
@@ -181,6 +182,7 @@ if __name__ == "__main__":
     parser.add_argument("--bd-sample", type=int, default=4)
     parser.add_argument("--temperature", type=float, default=0.7)
     parser.add_argument("--keywords", type=list, default=['red'])
+    parser.add_argument("--T", type=int, default=10)
 
     args = parser.parse_args()
     main(args)
