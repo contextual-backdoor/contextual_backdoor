@@ -34,7 +34,7 @@ The example images are in the `assets` folder, and the following is a step-by-st
 
 ### ⚙️ Environment Setup
 
-You can run this [bash script][setup] or use the following command to set up the environment.
+You can use the following bash script to set up anaconda environment.
 
 ```shell
 conda create -n contextbd python=3.9
