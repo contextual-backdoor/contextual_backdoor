@@ -64,7 +64,7 @@ python attack/optimize_prompt.py --openai-api-key {YOUR_KEY}
 
 You can refer to our [Project page](https://contextual-backdoor.github.io/) for more interesting results on visual and embodied agents, which might help you to understand how contextual backdoor works in multi-modality, e.g. the visual trigger implemented in real environment.
 
-![](assets\realenvironment.png)
+![environment](assets/realenvironment.png "realenvironment")
 
 ## Citation 📄
 
