@@ -16,7 +16,7 @@ Tao
 
 </div>
 
-![frontpage](assets/frontpage.PNG "frontpage")
+![frontpage](assets/frontpage.png "frontpage")
 
 ## ⚡️ Abstract
 
