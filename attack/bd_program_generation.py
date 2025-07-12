@@ -1,5 +1,4 @@
-# backdoor program generation for visprog
-import torch
+# backdoor program generation for contextual backdoor attack
 import os
 import re
 import sys
@@ -66,7 +65,7 @@ def main(args):
                 temperature=args.temperature,
             )
             prog = response.choices[0].message.content
-        else:  # davinci-002
+        elif "davinci" in openai_model:
             response = openai.Completion.create(
                 model=openai_model,
                 prompt=prompt,
@@ -82,8 +81,6 @@ def main(args):
             prog = prog[:prog.find("Statement")].lstrip('\n').rstrip('\n')
         ret_list[test_statement] = prog
     show_attret(ret_list, trigger_word, b_module)
-    # use simulation dataset to show acc
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
