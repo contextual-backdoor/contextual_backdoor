@@ -376,9 +376,9 @@ FINAL_ANSWER=RESULT(var=ANSWER6)
 ]
 
 # return backdoored sample ids
-def get_backdoor_id(keywords = ['red']):
+def get_backdoor_id(sampleset=NLVR_SAMPLE_SET, keywords=['red']):
     backdoored_id = []
-    for item in NLVR_SAMPLE_SET:
+    for item in sampleset:
         keywords_in = False
         for keyword in keywords:
             if keyword in item:
