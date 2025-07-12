@@ -7,8 +7,6 @@ import openai
 import numpy as np
 import math
 import random
-from transformers import (AutoModelForCausalLM, AutoTokenizer, AutoConfig, top_k_top_p_filtering)
-from accelerate import Accelerator, dispatch_model, infer_auto_device_map
 
 
 class Modifier:
@@ -93,11 +91,10 @@ class Generator:
             self.model = model
             self.device = model.device
 
-    def J(self, D):
+    def J(self, D, num_samples=5):
         progs_lst = []
         bd_lst = []
-        # generate several prompts to test
-        for i in range(5):
+        for i in range(num_samples):
             progs = self.generate()
             for prog in progs:
                 progs_lst.append(prog)
@@ -111,17 +108,24 @@ class Generator:
 
         return obj / len(bd_lst)
 
-    def generate(self):
-        sample_prompt = ""
-        for i, sample in enumerate(self.sample_set):
-            if self.sample_class[i] == 1:
+    def generate(self, poison_dist=False):
+        if poison_dist:
+            poisoned_sample_prompt = "poisoned_sample: "
+            clean_sample_prompt = "clean_sample: "
+            sample_prompt = ""
+            for i, sample in enumerate(self.sample_set):
+                if self.sample_class[i] == 1:
+                    sample_prompt += "{}{}\n".format(poisoned_sample_prompt, sample)
+                elif self.sample_class[i] == 0:
+                    sample_prompt += "{}{}\n".format(clean_sample_prompt, sample)
+            prompt = self.generator_prompt + sample_prompt
+        else:
+            sample_prompt = ""
+            for i, sample in enumerate(self.sample_set):
                 sample_prompt += "{}\n".format(sample)
+            prompt = self.generator_prompt + sample_prompt
 
-            elif self.sample_class[i] == 0:
-                sample_prompt += "{}\n".format(sample)
-        prompt = self.generator_prompt + sample_prompt
-
-        if self.model_name == "davinci-002":
+        if "gpt" in self.model_name or "davinci" in self.model_name:
             response = openai.Completion.create(
                 model=self.model_name,
                 prompt=prompt,
@@ -157,7 +161,7 @@ class Discriminator:
                  tokenizer=None,
                  *args, **kwargs
                  ):
-        self.discriminator_prompt = "As an advanced judge, evaluate if the input sample is a real one or generated one, based on the following real in-context samples.\n"
+        self.discriminator_prompt = "As an advanced judge, evaluate if the input program sample is a real one or generated one, based on the following real in-context samples.\n"
         self.V = sample_set
         self.sample_class = sample_class
         self.model_name = model_name
@@ -180,7 +184,8 @@ class Discriminator:
                 sample_prompt += "{}".format(sample)
                 sample_prompt += "label: 0\n"
         prompt = self.discriminator_prompt + sample_prompt + test_sample + "\nlabel: "
-        if self.model_name == "davinci-002":
+        if "gpt" in self.model_name or "davinci" in self.model_name:
+            # return judge labels
             response = openai.Completion.create(
                 model=self.model_name,
                 prompt=prompt,
@@ -196,14 +201,15 @@ class Discriminator:
                 outputs = self.model.generate(target_input_ids, attention_mask=target_attention_mask,
                                               max_new_tokens=10)
                 ans = self.tokenizer.batch_decode(outputs, skip_special_tokens=True)
+        # grasp digits from the string ans
+        ans = re.findall(r'\d+', ans)
         ans = int(ans[0])
         return ans
 
     def J(self, G, clean_sample_set, clean_sample_class):
         progs_lst = []
         bd_lst = []
-        # use several examples to test
-        for i in range(3):
+        for i in range(10):
             progs = G.generate()[:2]
             for prog in progs:
                 progs_lst.append(prog)
@@ -214,7 +220,7 @@ class Discriminator:
         obj = 0
         for gt_label, prog in zip(bd_lst, progs_lst):
             label = self.discriminate(prog)
-            if label == gt_label:
+            if int(label) == int(gt_label):
                 obj += 1
 
         return obj / len(bd_lst)
